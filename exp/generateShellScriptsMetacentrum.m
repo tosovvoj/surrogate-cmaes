@@ -5,7 +5,7 @@ fNameMetacentrumTaskTemplate = ['exp' filesep 'metacentrum_task_template.sh'];
 fNameTask = [exppath filesep exp_id '_task.sh'];
 fNameTaskShell = ['$EXPPATH_SHORT/$EXPID/${EXPID}_task.sh'];
 fNameMng =  [exppath filesep exp_id '_manager.sh'];
-logDir = '/storage/plzen1/home/bajeluk/public';
+logDir = '/storage/plzen1/home/tosovvoj/public';
 
 % walltime = '1d';
 % nCPU = 1;
