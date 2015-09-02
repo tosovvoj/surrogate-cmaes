@@ -35,6 +35,9 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
   sDefaults.evoControlValidatePoints    = 0;
   sDefaults.modelType = '';                     % gp | rf
   sDefaults.modelOpts = [];                     % model specific options
+  sDefaults.dimReductionReduceDistance=1; % 1=no Reduc;
+  sDefaults.dimReductionDimCnt=1;
+  
   
   surrogateStats = NaN(1, 2);
 
@@ -44,10 +47,20 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
   for fname = fieldnames(inOpts)'
     surrogateOpts.(fname{1}) = inOpts.(fname{1});
   end
+ 
 
   assert(size(xmean,2) == 1, 'surrogateManager(): xmean is not a column vector!');
   dim = size(xmean,1);
-
+  
+  surrogateOpts.sampleOpts.dimReductionReduceDistance=surrogateOpts.dimReductionReduceDistance;
+  if(surrogateOpts.dimReductionReduceDistance ~=1)
+      if((isfield(surrogateOpts.modelOpts,'dimReduction') && (surrogateOpts.modelOpts.dimReduction ~=1)))
+    surrogateOpts.sampleOpts.dimReductionDimCnt=(dim-ceil(dim*surrogateOpts.modelOpts.dimReduction));        
+      else
+      warning('dimReductionReduceDistance is on, but dimReduction is off, setting both off');
+      surrogateOpts.sampleOpts.dimReductionReduceDistance=1;
+      end  
+  end
   % evolution control -- use model? individual? generation?
   if (strcmpi(surrogateOpts.evoControl, 'none'))
     % No model at all
