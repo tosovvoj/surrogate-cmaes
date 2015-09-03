@@ -48,7 +48,7 @@ sgParamDef(8).values = {1};
 sgParamDef(9).name   = 'evoControlOrigGenerations';
 sgParamDef(9).values = {1};
 sgParamDef(10).name   = 'evoControlModelGenerations';
-sgParamDef(10).values = {1, 5};
+sgParamDef(10).values = {5};
 sgParamDef(11).name   = 'evoControlValidatePoints';
 sgParamDef(11).values = {0};
 sgParamDef(12).name   = 'modelOpts';
@@ -84,7 +84,7 @@ sgParamDef(12).values = { struct( ...
   'dimReduction', 0.3,...
   'inputFraction', 1) };
 sgParamDef(13).name   = 'dimReductionReduceDistance';          % 1=no Reduce, 2= at half, 3=third 10= tenth etc...
-sgParamDef(13).values = {2,4,10};
+sgParamDef(13).values = {4,10,50};
 
 % CMA-ES parameters
 cmParamDef(1).name   = 'PopSize';
