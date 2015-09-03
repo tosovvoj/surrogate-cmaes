@@ -4,8 +4,8 @@ function [ euclidianDistance ] = getDistance( base,pointInBase,cut)
 %   Detailed explanation goes here
 normOfBases=arrayfun(@(idx) norm(base(idx,:)), 1:size(base,1));
 [~ ,origDimension]=size(base);
-leftPart=zeros(1:origDimension-cut);
-rightPart=ones(1:cut);
+leftPart=zeros([1,origDimension-cut]);
+rightPart=ones([1,cut]);
 selector=[leftPart rightPart];
 selector=selector.*normOfBases;
 deviationInDimension=pointInBase*selector';
