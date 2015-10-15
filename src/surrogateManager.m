@@ -1,4 +1,4 @@
-function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogateManager(xmean, sigma, lambda, BD, diagD, countiter, fitfun_handle, inOpts, varargin)
+function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogateManager(xmean, sigma, lambda,B, BD, diagD, countiter, fitfun_handle, inOpts, varargin)
 % surrogateManager  controls sampling of new solutions and using a surrogate model
 %
 % @xmean, @sigma, @lambda, @BD, @diagD -- CMA-ES internal variables
@@ -16,6 +16,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
   % TODO: test, if generationEC really works; GenerationEC is now derived from handle
 
   persistent lastModel;         % last successfully trained model
+  persistent lastReduceModel;         % last successfully trained model
   persistent archive;           % archive of original-evaluated individuals
 
   % TODO: make an array with all the status variables from each generation
@@ -39,7 +40,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
   sDefaults.dimReductionDimCnt=1;
   
   
-  surrogateStats = NaN(1, 2);
+  surrogateStats = NaN(1, 4);
 
   % copy the defaults settings...
   surrogateOpts = sDefaults;
@@ -47,6 +48,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
   for fname = fieldnames(inOpts)'
     surrogateOpts.(fname{1}) = inOpts.(fname{1});
   end
+  
  
 
   assert(size(xmean,2) == 1, 'surrogateManager(): xmean is not a column vector!');
@@ -54,8 +56,9 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
   
   surrogateOpts.sampleOpts.dimReductionReduceDistance=surrogateOpts.dimReductionReduceDistance;
   if(surrogateOpts.dimReductionReduceDistance ~=1)
+      surrogateOpts.modelOpts.dimReduceCnt=ceil(dim*surrogateOpts.modelOpts.dimReduction);
       if((isfield(surrogateOpts.modelOpts,'dimReduction') && (surrogateOpts.modelOpts.dimReduction ~=1)))
-    surrogateOpts.sampleOpts.dimReductionDimCnt=(dim-ceil(dim*surrogateOpts.modelOpts.dimReduction));        
+    surrogateOpts.sampleOpts.dimReduceCnt=(surrogateOpts.modelOpts.dimReduceCnt);        
       else
       warning('dimReductionReduceDistance is on, but dimReduction is off, setting both off');
       surrogateOpts.sampleOpts.dimReductionReduceDistance=1;
@@ -78,6 +81,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
       surrogateOpts.modelOpts, xmean');
   if (countiter == 1)
     lastModel = [];
+    lastReduceModel = [];
     archive = Archive(dim);
   end
   
@@ -220,11 +224,12 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
         % we will switch to 'model'-mode in the next generation
         % prepare data for a new model
 
-        [newModel, surrogateStats, isTrained] = trainGenerationECModel(newModel, archive, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
+        [newModel, newReduceModel, surrogateStats, isTrained] = trainGenerationECModel(newModel, archive, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
 
         if (isTrained)
           % TODO: archive the lastModel...?
           lastModel = newModel;
+          lastReduceModel= newReduceModel;
         else
           % not enough training data :( -- continue with another
           % 'original'-evaluated generation
@@ -258,6 +263,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
       % shift the model (and possibly evaluate some new points newX, newY = f(newX) )
       % newX = []; newY = []; newZ = []; evals = 0;
       [shiftedModel, evals, newX, newY, newZ] = lastModel.generationUpdate(xmean', xValidValid', zValid', surrogateOpts.evoControlValidatePoints, fitfun_handle, varargin{:});
+      [shiftedReduceModel, evalReds, newRedX, newRedY, newRedZ] = lastReduceModel.generationUpdate(xmean', xValidValid', zValid', surrogateOpts.evoControlValidatePoints, fitfun_handle, varargin{:});
       % count the original evaluations
       surrogateOpts.sampleOpts.counteval = surrogateOpts.sampleOpts.counteval + evals;
       counteval = surrogateOpts.sampleOpts.counteval;
@@ -283,6 +289,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
       if (~isempty(shiftedModel))
         % we've got a valid model, so we'll use it!
         [predict_fitness_raw, ~] = shiftedModel.predict(arx(:,remainingIdx)');
+        [predict_fitness_raw_reduce, ~] = shiftedReduceModel.predict(arx(:,remainingIdx)');
         fitness_raw(remainingIdx) = predict_fitness_raw';
         disp(['Model.generationUpdate(): We are using the model for ' num2str(length(remainingIdx)) ' individuals.']);
         % shift the predicted fitness: the best predicted fitness
@@ -295,7 +302,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
 
         % DEBUG:
         fprintf('  test ');
-        surrogateStats = getModelStatistics(shiftedModel, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
+        surrogateStats = getModelStatistics(shiftedModel,shiftedReduceModel, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
 
       else
         % we don't have a good model, so original fitness will be used
@@ -309,7 +316,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
         archive = archive.save(arxvalid_', fitness_raw_', countiter);
 
         % train a new model for the next generation
-        [newModel, surrogateStats, isTrained] = trainGenerationECModel(newModel, archive, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
+        [newModel,newReduceModel, surrogateStats, isTrained] = trainGenerationECModel(newModel, archive, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
 
         if (isTrained)
           % TODO: archive the lastModel...?
@@ -337,20 +344,33 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
 end
 
 
-function surrogateStats = getModelStatistics(model, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter)
+function surrogateStats = getModelStatistics(model,reduceModel, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter)
 % print and save the statistics about the currently 
 % trained model on testing data
+dimReductionReduceDistanceBackup=surrogateOpts.sampleOpts.dimReductionReduceDistance;
+surrogateOpts.sampleOpts.dimReductionReduceDistance=1;
   [~, xValidTest, ~] = ...
       sampleCmaesNoFitness(xmean, sigma, lambda, BD, diagD, surrogateOpts.sampleOpts);
-  surrogateStats = [NaN NaN];
+  surrogateOpts.sampleOpts.dimReductionReduceDistance=dimReductionReduceDistanceBackup;
+  surrogateStats = [NaN NaN NaN NaN];
   if (isfield(surrogateOpts.modelOpts, 'bbob_func'))
     preciseModel = ModelFactory.createModel('bbob', surrogateOpts.modelOpts, xmean');
     yTest = preciseModel.predict(xValidTest');
+    fprintf('-----');
+%     helper(preciseModel,BD,xmean',30)
+    
+    fprintf('-----');
     yPredict = model.predict(xValidTest');
+    yPredictReduce = reduceModel.predict(xValidTest');
+    neglectedDistance=getDistance(BD,xValidTest',2,diagD);
+    
+    getDistance(BD,xValidTest',2,diagD);
     kendall = corr(yPredict, yTest, 'type', 'Kendall');
+    kendallReduce = corr(yPredictReduce, yTest, 'type', 'Kendall');
     rmse = sqrt(sum((yPredict - yTest).^2))/length(yPredict);
-    fprintf(' RMSE = %f, Kendl. corr = %f.\n', rmse, kendall);
-    surrogateStats = [rmse kendall];
+    rmseReduce = sqrt(sum((yPredictReduce - yTest).^2))/length(yPredictReduce);
+    fprintf('\n       RMSE = %f, Kendl. corr       = %f.\n RMSEReduce = %f, KendlReduce. corr = %f.\n', rmse, kendall,rmseReduce,kendallReduce);
+    surrogateStats = [rmse kendall rmseReduce kendallReduce];
   else
     fprintf('\n');
   end
@@ -384,8 +404,8 @@ function surrogateStats = getModelStatistics(model, xmean, sigma, lambda, BD, di
 end
 
 
-function [newModel, surrogateStats, isTrained] = trainGenerationECModel(model, archive, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter)
-  surrogateStats = NaN(1, 2);
+function [newModel,newReduceModel, surrogateStats, isTrained] = trainGenerationECModel(model, archive, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter)
+surrogateStats = NaN(1, 4);
 % train the 'model' on the relevant data in 'archive'
   isTrained = false;
   dim = model.dim;
@@ -398,17 +418,20 @@ function [newModel, surrogateStats, isTrained] = trainGenerationECModel(model, a
       xmean', surrogateOpts.evoControlTrainRange, trainSigma, BD);
   if (length(y) >= nRequired)
     % we have got enough data for new model! hurraayh!
-    newModel = model.train(X, y, xmean', countiter, sigma, BD);
+    [newModel,newReduceModel] = model.train(X, y, xmean', countiter, sigma, BD);
     isTrained = (newModel.trainGeneration > 0);
 
     % DEBUG: print and save the statistics about the currently 
     % trained model on testing data (RMSE and Kendall's correlation)
     if (isTrained)
       fprintf('  model trained on %d points, train ', length(y));
-      surrogateStats = getModelStatistics(newModel, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
+      surrogateStats = getModelStatistics(newModel,newReduceModel, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
+      preciseModel = ModelFactory.createModel('bbob', surrogateOpts.modelOpts, xmean');
+%       helper(preciseModel,BD,xmean',30)
     end
   else
     newModel = model;
+    newReduceModel = model;
     isTrained = false;
   end
 end

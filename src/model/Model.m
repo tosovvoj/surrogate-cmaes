@@ -80,7 +80,7 @@ classdef (Abstract) Model
       if (obj.useShift)
         obj.shiftMean = xMean - obj.trainMean;
       else
-        obj.shiftMean = zeros(size(xMean));
+        obj.shiftMean = zeros(size(obj.shiftMean));
       end
 
       y = NaN; x = zeros(1,obj.dim);
@@ -166,8 +166,8 @@ classdef (Abstract) Model
       end
             %dimensionality reduction
       if(isprop(obj,'dimReduction') && (obj.dimReduction ~=1))
-          cntDimension=ceil(obj.dim*obj.dimReduction);
-          obj.shiftMean=obj.shiftMean(1:cntDimension);
+%           cntDimension=ceil(obj.dim*obj.dimReduction);
+%           obj.shiftMean=obj.shiftMean(1:cntDimension);
           XtransfReduce=obj.reductionMatrix*XTransf';
           XtransfReduce=XtransfReduce';
       else
@@ -216,7 +216,7 @@ classdef (Abstract) Model
 
     end
     
-    function obj = train(obj, X, y, xMean, generation,sigma,BD)
+    function [obj,objReduced] = train(obj, X, y, xMean, generation,sigma,BD)
     % train the model based on the data (X,y)
 
       % transform input variables using Mahalanobis distance
@@ -231,16 +231,22 @@ classdef (Abstract) Model
       %dimensionality reduction
       if(isprop(obj,'dimReduction') && (obj.dimReduction ~=1))
           cntDimension=ceil(obj.dim*obj.dimReduction);
-          obj.shiftMean=obj.shiftMean(1:cntDimension);
+          selector=(obj.dim-cntDimension+1:obj.dim);
+          objReduced=GpModel(obj.options,obj.shiftMean(selector));
+          objReduced.trainSigma=obj.trainSigma;
+          objReduced.trainBD=obj.trainBD;
+          objReduced.shiftMean=obj.shiftMean(selector);
           changeMatrix=(eye(obj.dim)/BD);
-          changeMatrix=changeMatrix(1:cntDimension,:);
-          obj.reductionMatrix=changeMatrix;
+          changeMatrix=changeMatrix(selector,:);
+          objReduced.reductionMatrix=changeMatrix;
           XtransfReduce=changeMatrix*XTransf';
           XtransfReduce=XtransfReduce';          
       else
       XtransfReduce=XTransf;
       end
-      obj = trainModel(obj, XtransfReduce, y, xMean, generation);
+      obj = trainModel(obj, XTransf, y, xMean, generation);
+      obj.dimReduction=1;
+      objReduced=trainModel(objReduced, XtransfReduce, y, xMean, generation);
     end
 
   end

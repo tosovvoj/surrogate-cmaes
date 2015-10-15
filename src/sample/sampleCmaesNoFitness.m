@@ -17,27 +17,31 @@ function [arx, arxvalid, arz] = sampleCmaesNoFitness(xmean, sigma, lambda, BD, d
   N = size(xmean, 1);
 
   % Generate and evaluate lambda offspring
- distanceReduce=opts.dimReductionReduceDistance;
- origLambda=lambda;
- lambda=lambda*distanceReduce;
+%  distanceReduce=opts.dimReductionReduceDistance;
+ if(opts.dimReductionReduceDistance~=1)
+    reduceBD=[BD(:,1:(opts.dimReduceCnt)/opts.dimReductionReduceDistance), BD(:,opts.dimReduceCnt+1:end)];
+ else
+     reduceBD=BD;
+ end
+ 
  arz = randn(N,lambda);
 
   if ~flgDiagonalOnly
-    arx = repmat(xmean, 1, lambda) + sigma * (BD * arz); % Eq. (1)
+    arx = repmat(xmean, 1, lambda) + sigma * (reduceBD * arz); % Eq. (1)
   else
     arx = repmat(xmean, 1, lambda) + repmat(sigma * diagD, 1, lambda) .* arz; 
   end
   
-  if(distanceReduce~=1)
-      arxINBDBase=BD\arx;
-      distances=1:lambda;
-      for i=1:lambda
-          distances(i)=getDistance(BD,arxINBDBase(:,i)',opts.dimReductionDimCnt);
-      end
-      [~,index]=sort(distances);
-      arx=arx(:,index(1:origLambda));
-      arz=arz(:,index(1:origLambda));
-  end
+%   if(distanceReduce~=1)
+%       arxINBDBase=BD\arx;
+%       distances=1:lambda;
+%       for i=1:lambda
+%           distances(i)=getDistance(BD,arxINBDBase(:,i)',opts.dimReductionDimCnt);
+%       end
+%       [~,index]=sort(distances);
+%       arx=arx(:,index(1:origLambda));
+%       arz=arz(:,index(1:origLambda));
+%   end
   
   if noiseHandling 
     if noiseEpsilon == 0
