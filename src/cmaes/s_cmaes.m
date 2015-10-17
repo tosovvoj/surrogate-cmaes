@@ -909,12 +909,12 @@ while isempty(stopflag)
 
   if (~exist('surrogateOpts','var'))
     % use standard CMA-ES (no surrogate at all)
-    [fitness.raw, arx, arxvalid, arz, counteval] = sampleCmaes(xmean, sigma, lambda, BD, diagD, fitfun_handle, sampleOpts, varargin{:});
+    [fitness.raw, arx, arxvalid, arz, counteval] = sampleCmaes(mu,xmean, sigma, lambda,B, BD, diagD, fitfun_handle, sampleOpts, varargin{:});
     surrogateStats = [];
   else
     % hand over the control to surrogateManager()
     surrogateOpts.sampleOpts = sampleOpts;
-    [fitness.raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogateManager(xmean, sigma, lambda, BD, diagD, countiter, fitfun_handle, surrogateOpts, varargin{:});
+    [fitness.raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogateManager(mu,xmean, sigma, lambda,B, BD, diagD, countiter, fitfun_handle, surrogateOpts, varargin{:});
   end
   
   % Surrogate CMA-ES end
@@ -1217,7 +1217,7 @@ while isempty(stopflag)
   end
   
   % Update B and D from C
-
+diagD;
   if ~flgDiagonalOnly && (ccov1+ccovmu+neg.ccov) > 0 && mod(countiter, 1/(ccov1+ccovmu+neg.ccov)/N/10) < 1
     C=triu(C)+triu(C,1)'; % enforce symmetry to prevent complex numbers
     [B,tmp] = eig(C);     % eigen decomposition, B==normalized eigenvectors
@@ -1330,6 +1330,7 @@ while isempty(stopflag)
    end
   end
 
+
   % ----- numerical error management -----
   % Adjust maximal coordinate axis deviations
   if any(sigma*sqrt(diagC) > maxdx)
@@ -1410,8 +1411,30 @@ while isempty(stopflag)
       sigma = sigma * exp(0.2+cs/damps); 
     end
   end
+  
+  
+  
+%     global gpm;
+%   if(~isempty(gpm))
+%    [~,Idd] = sort(diagD');
+%    disp('diagD')
+%    Idd
+%   diagD'
+%   disp('difference')
+%   res=(helper(gpm, B, xmean' ,30))
+%   disp('mean')
+%   mean(res)
+% %   [~,I] = sort(res);
+%   I
+%   I=I;
+%   disp('-------------------------------');
+%   end
     
   % ----- end numerical error management -----
+%   global s1;
+%   helper(s1,BD,xmean',30)
+%   helper(s1,BD,xmean',40)
+%   helper(s1,BD,xmean',100)
   
   % Keep overall best solution
   out.evals = counteval;

@@ -228,6 +228,11 @@ classdef (Abstract) Model
       else
         XTransf = X;
       end
+      
+      obj = trainModel(obj, XTransf, y, xMean, generation);
+
+      %       if we do not use dim reduction than reduce model is same as normal model;
+      objReduced=obj;
       %dimensionality reduction
       if(isprop(obj,'dimReduction') && (obj.dimReduction ~=1))
           cntDimension=ceil(obj.dim*obj.dimReduction);
@@ -240,13 +245,10 @@ classdef (Abstract) Model
           changeMatrix=changeMatrix(selector,:);
           objReduced.reductionMatrix=changeMatrix;
           XtransfReduce=changeMatrix*XTransf';
-          XtransfReduce=XtransfReduce';          
-      else
-      XtransfReduce=XTransf;
-      end
-      obj = trainModel(obj, XTransf, y, xMean, generation);
-      obj.dimReduction=1;
-      objReduced=trainModel(objReduced, XtransfReduce, y, xMean, generation);
+          XtransfReduce=XtransfReduce';   
+          objReduced=trainModel(objReduced, XtransfReduce, y, xMean, generation);
+          obj.dimReduction=1;
+      end     
     end
 
   end
