@@ -292,7 +292,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
         % we've got a valid model, so we'll use it!
         [predict_fitness_raw, ~] = shiftedModel.predict(arx(:,remainingIdx)');
         [predict_fitness_raw_reduce, ~] = shiftedReduceModel.predict(arx(:,remainingIdx)');
-        fitness_raw(remainingIdx) = predict_fitness_raw_reduce';
+        fitness_raw(remainingIdx) = predict_fitness_raw';
         disp(['Model.generationUpdate(): We are using the model for ' num2str(length(remainingIdx)) ' individuals.']);
         % shift the predicted fitness: the best predicted fitness
         % could not be better than the so-far best fitness -- it would fool CMA-ES!
@@ -302,8 +302,6 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
         diff = max(bestFitnessArchive - bestFitnessPopulation, 0);
         fitness_raw = fitness_raw + diff;
 
-        % DEBUG:
-        fprintf('  test ');
         surrogateStats = getModelStatistics(mu,shiftedModel,shiftedReduceModel, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
 
       else
@@ -371,11 +369,16 @@ surrogateOpts.sampleOpts.dimReductionReduceDistance=1;
     [~, correctOrder]=sort(yTest);
     [~ ,predictReduceOrder]=sort(yPredictReduce);
     [~ ,predictOrder]=sort(yPredict);
-    
-    sameCntReduce=getSameCnt(correctOrder(1:mu),predictReduceOrder(1:mu));
-    sameCntNormal=getSameCnt(correctOrder(1:mu),predictOrder(1:mu));
-    sameCntReduce=sameCntReduce/mu;
-    sameCntNormal=sameCntNormal/mu;
+    [lamda,~]=size(correctOrder);
+    if(lamda>mu)
+        sameCntReduce=getSameCnt(correctOrder(1:mu),predictReduceOrder(1:mu));
+        sameCntNormal=getSameCnt(correctOrder(1:mu),predictOrder(1:mu));
+        sameCntReduce=sameCntReduce/mu;
+        sameCntNormal=sameCntNormal/mu;
+    else
+        sameCntReduce=-lamda;
+        sameCntNormal=-mu;        
+    end
     
     kendall = corr(yPredict, yTest, 'type', 'Kendall');
     kendallReduce = corr(yPredictReduce, yTest, 'type', 'Kendall');

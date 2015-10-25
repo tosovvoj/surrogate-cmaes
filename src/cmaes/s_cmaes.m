@@ -909,7 +909,7 @@ while isempty(stopflag)
 
   if (~exist('surrogateOpts','var'))
     % use standard CMA-ES (no surrogate at all)
-    [fitness.raw, arx, arxvalid, arz, counteval] = sampleCmaes(mu,xmean, sigma, lambda,B, BD, diagD, fitfun_handle, sampleOpts, varargin{:});
+    [fitness.raw, arx, arxvalid, arz, counteval] = sampleCmaes(xmean, sigma, lambda,BD, diagD, fitfun_handle, sampleOpts, varargin{:});
     surrogateStats = [];
   else
     % hand over the control to surrogateManager()
