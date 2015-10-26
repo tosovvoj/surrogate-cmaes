@@ -235,8 +235,7 @@ classdef (Abstract) Model
       objReduced=obj;
       %dimensionality reduction
       if(isprop(obj,'dimReduction') && (obj.dimReduction ~=1))
-          cntDimension=ceil(obj.dim*obj.dimReduction);
-          selector=(obj.dim-cntDimension+1:obj.dim);
+          selector=((obj.options.dimNeglectCnt+1):obj.dim);
           objReduced=GpModel(obj.options,obj.shiftMean(selector));
           objReduced.trainSigma=obj.trainSigma;
           objReduced.trainBD=obj.trainBD;

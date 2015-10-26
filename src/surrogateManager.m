@@ -363,32 +363,36 @@ surrogateOpts.sampleOpts.dimReductionReduceDistance=1;
     fprintf('-----');
     yPredict = model.predict(xValidTest');
     yPredictReduce = reduceModel.predict(xValidTest');
-    neglectedDistance=getDistance(BD,xValidTest',surrogateOpts.modelOpts.dimUseCnt,surrogateOpts.modelOpts.dimNeglectCnt,diagD);
-    error= abs(yPredict - yTest);
-    kendallDistanceError= corr(neglectedDistance', error, 'type', 'Kendall');
-    kendall = corr(yPredict, yTest, 'type', 'Kendall');
-    kendallReduce = corr(yPredictReduce, yTest, 'type', 'Kendall');
-    rmse = sqrt(sum((yPredict - yTest).^2))/length(yPredict);
-    rmseReduce = sqrt(sum((yPredictReduce - yTest).^2))/length(yPredictReduce);
-    
-    [~, correctOrder]=sort(yTest);
-    [~ ,predictReduceOrder]=sort(yPredictReduce);
-    [~ ,predictOrder]=sort(yPredict);
-    [lamda,~]=size(correctOrder);
-    [lamda2,~]=size(predictReduceOrder);
     try
-        sameCntReduce=getSameCnt(correctOrder(1:mu),predictReduceOrder(1:mu));
-        sameCntNormal=getSameCnt(correctOrder(1:mu),predictOrder(1:mu));
-        sameCntReduce=sameCntReduce/mu;
-        sameCntNormal=sameCntNormal/mu;
-    catch ME
-        rmse=lamda;
-        kendall=lamda2;
-        rmseReduce=mu;
-        kendallReduce=NaN;   
-        kendallDistanceError=NaN;
-        sameCntNormal=NaN;
-        sameCntReduce=NaN;
+        neglectedDistance=getDistance(BD,xValidTest',surrogateOpts.modelOpts.dimUseCnt,surrogateOpts.modelOpts.dimNeglectCnt,diagD);
+        error= abs(yPredictReduce - yTest);
+        kendallDistanceError= corr(neglectedDistance', error, 'type', 'Kendall');
+        kendall = corr(yPredict, yTest, 'type', 'Kendall');
+        kendallReduce = corr(yPredictReduce, yTest, 'type', 'Kendall');
+        rmse = sqrt(sum((yPredict - yTest).^2))/length(yPredict);
+        rmseReduce = sqrt(sum((yPredictReduce - yTest).^2))/length(yPredictReduce);
+
+        [~, correctOrder]=sort(yTest);
+        [~ ,predictReduceOrder]=sort(yPredictReduce);
+        [~ ,predictOrder]=sort(yPredict);
+%         [lamda,~]=size(correctOrder);
+%         [lamda2,~]=size(predictReduceOrder);
+
+         sameCntReduce=getSameCnt(correctOrder(1:mu),predictReduceOrder(1:mu));
+         sameCntNormal=getSameCnt(correctOrder(1:mu),predictOrder(1:mu));
+         sameCntReduce=sameCntReduce/mu;
+         sameCntNormal=sameCntNormal/mu;
+    catch E
+        msgID = 'MYFUN:incorrectSize';
+        msg = 'Mini workaround :)';    
+        ME=SWException(msgID,msg); 
+        ME.yTest=yTest;
+        ME.xValidTest=xValidTest;
+        ME.error=error;
+        ME.model=model;
+        ME.yPredictReduce=yPredictReduce;
+        ME.originException=E;
+        throw(ME);        
     end
     
     
