@@ -40,7 +40,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
   sDefaults.dimReductionDimCnt=1;
   
   
-  surrogateStats = NaN(1, 7);
+  surrogateStats = NaN(1, 8);
 
   % copy the defaults settings...
   surrogateOpts = sDefaults;
@@ -353,7 +353,7 @@ surrogateOpts.sampleOpts.dimReductionReduceDistance=1;
   [~, xValidTest, ~] = ...
       sampleCmaesNoFitness(xmean, sigma, lambda, BD, diagD, surrogateOpts.sampleOpts);
   surrogateOpts.sampleOpts.dimReductionReduceDistance=dimReductionReduceDistanceBackup;
-  surrogateStats = NaN(1, 7);
+  surrogateStats = NaN(1, 8);
   if (isfield(surrogateOpts.modelOpts, 'bbob_func'))
     preciseModel = ModelFactory.createModel('bbob', surrogateOpts.modelOpts, xmean');
     yTest = preciseModel.predict(xValidTest');
@@ -366,28 +366,36 @@ surrogateOpts.sampleOpts.dimReductionReduceDistance=1;
     neglectedDistance=getDistance(BD,xValidTest',surrogateOpts.modelOpts.dimUseCnt,surrogateOpts.modelOpts.dimNeglectCnt,diagD);
     error= abs(yPredict - yTest);
     kendallDistanceError= corr(neglectedDistance', error, 'type', 'Kendall');
-    [~, correctOrder]=sort(yTest);
-    [~ ,predictReduceOrder]=sort(yPredictReduce);
-    [~ ,predictOrder]=sort(yPredict);
-    [lamda,~]=size(correctOrder);
-    if(lamda>mu)
-        sameCntReduce=getSameCnt(correctOrder(1:mu),predictReduceOrder(1:mu));
-        sameCntNormal=getSameCnt(correctOrder(1:mu),predictOrder(1:mu));
-        sameCntReduce=sameCntReduce/mu;
-        sameCntNormal=sameCntNormal/mu;
-    else
-        sameCntReduce=-lamda;
-        sameCntNormal=-mu;        
-    end
-    
     kendall = corr(yPredict, yTest, 'type', 'Kendall');
     kendallReduce = corr(yPredictReduce, yTest, 'type', 'Kendall');
     rmse = sqrt(sum((yPredict - yTest).^2))/length(yPredict);
     rmseReduce = sqrt(sum((yPredictReduce - yTest).^2))/length(yPredictReduce);
+    
+    [~, correctOrder]=sort(yTest);
+    [~ ,predictReduceOrder]=sort(yPredictReduce);
+    [~ ,predictOrder]=sort(yPredict);
+    [lamda,~]=size(correctOrder);
+    [lamda2,~]=size(predictReduceOrder);
+    try
+        sameCntReduce=getSameCnt(correctOrder(1:mu),predictReduceOrder(1:mu));
+        sameCntNormal=getSameCnt(correctOrder(1:mu),predictOrder(1:mu));
+        sameCntReduce=sameCntReduce/mu;
+        sameCntNormal=sameCntNormal/mu;
+    catch ME
+        rmse=lamda;
+        kendall=lamda2;
+        rmseReduce=mu;
+        kendallReduce=NaN;   
+        kendallDistanceError=NaN;
+        sameCntNormal=NaN;
+        sameCntReduce=NaN;
+    end
+    
+    
     fprintf('\n       RMSE = %f, Kendl. corr       = %f.\n RMSEReduce = %f, KendlReduce. corr = %f.\n', rmse, kendall,rmseReduce,kendallReduce);
     fprintf('kendallDistanceError = %f.\n',kendallDistanceError);
-     fprintf('sameCntNormal = %f. sameCntReduce = %f.\n',sameCntNormal,sameCntReduce);
-    surrogateStats = [rmse kendall rmseReduce kendallReduce kendallDistanceError sameCntNormal sameCntReduce];
+    fprintf('sameCntNormal = %f. sameCntReduce = %f.\n',sameCntNormal,sameCntReduce);
+    surrogateStats = [rmse kendall rmseReduce kendallReduce kendallDistanceError sameCntNormal sameCntReduce,mu];
     
   else
     fprintf('\n');
@@ -423,7 +431,7 @@ end
 
 
 function [newModel,newReduceModel, surrogateStats, isTrained] = trainGenerationECModel(mu,model, archive, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter)
-surrogateStats = NaN(1, 7);
+surrogateStats = NaN(1, 8);
 % train the 'model' on the relevant data in 'archive'
   isTrained = false;
   dim = model.dim;
@@ -444,7 +452,7 @@ surrogateStats = NaN(1, 7);
     if (isTrained)
       fprintf('  model trained on %d points, train ', length(y));
       surrogateStats = getModelStatistics(mu,newModel,newReduceModel, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
-      preciseModel = ModelFactory.createModel('bbob', surrogateOpts.modelOpts, xmean');
+%       preciseModel = ModelFactory.createModel('bbob', surrogateOpts.modelOpts, xmean');
 %       helper(preciseModel,BD,xmean',30)
     end
   else
