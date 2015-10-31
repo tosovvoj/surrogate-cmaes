@@ -1,4 +1,4 @@
-exp_id = 'exp_geneEC_vojta_02_all';
+exp_id = 'exp_geneEC_vojta_03_all';
 exp_description = 'Surrogate CMA-ES model, GP and RF + rebase, generation EC, 24 functions, 15 instances -- first production test to BBOB workshop paper';
 
 machines = {'m'};
@@ -16,7 +16,7 @@ logDir = '/storage/plzen1/home/tosovvoj/public';
 bbParamDef(1).name   = 'dimensions';
 bbParamDef(1).values = {10};      % {2, 5 10};
 bbParamDef(2).name   = 'functions';
-bbParamDef(2).values = {1,2,3,5,6,8};%{1, 2, 3, 8, 13, 21};%num2cell()%(1:24);  % {1, 2, 3, 5, 6, 8, 10, 11, 12, 13, 14, 20, 21};
+bbParamDef(2).values = {1,2,3,8};%{1, 2, 3, 8, 13, 21};%num2cell()%(1:24);  % {1, 2, 3, 5, 6, 8, 10, 11, 12, 13, 14, 20, 21};
 % dimensions  = [10];     % which dimensions to optimize, subset of [2 3 5 10 20 40];
 % functions   = [8];      % function ID's to optimize (2 Sphere, 3 Rastrigin, 8 Rosenbrock)
 bbParamDef(3).name   = 'opt_function';

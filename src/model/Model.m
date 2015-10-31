@@ -166,10 +166,9 @@ classdef (Abstract) Model
       end
             %dimensionality reduction
       if(isprop(obj,'dimReduction') && (obj.dimReduction ~=1))
-%           cntDimension=ceil(obj.dim*obj.dimReduction);
-%           obj.shiftMean=obj.shiftMean(1:cntDimension);
-          XtransfReduce=obj.reductionMatrix*XTransf';
-          XtransfReduce=XtransfReduce';
+          [~,origDim]=size(obj.trainBD);
+          selector=((obj.options.dimNeglectCnt+1):origDim);
+          XtransfReduce=reduceDimensionality(obj.trainBD,selector,XTransf);
       else
       XtransfReduce=XTransf;
       end
@@ -237,14 +236,10 @@ classdef (Abstract) Model
       if(isprop(obj,'dimReduction') && (obj.dimReduction ~=1))
           selector=((obj.options.dimNeglectCnt+1):obj.dim);
           objReduced=GpModel(obj.options,obj.shiftMean(selector));
-          objReduced.trainSigma=obj.trainSigma;
-          objReduced.trainBD=obj.trainBD;
+          objReduced.trainSigma=sigma;
+          objReduced.trainBD=BD;
           objReduced.shiftMean=obj.shiftMean(selector);
-          changeMatrix=(eye(obj.dim)/BD);
-          changeMatrix=changeMatrix(selector,:);
-          objReduced.reductionMatrix=changeMatrix;
-          XtransfReduce=changeMatrix*XTransf';
-          XtransfReduce=XtransfReduce';   
+          XtransfReduce=reduceDimensionality(BD,selector,XTransf);
           objReduced=trainModel(objReduced, XtransfReduce, y, xMean, generation);
           obj.dimReduction=1;
       end     

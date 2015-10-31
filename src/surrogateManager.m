@@ -94,10 +94,11 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
     archive = archive.save(arxvalid', fitness_raw', countiter);
     return;
   end
+ 
 
   if (strcmpi(surrogateOpts.evoControl, 'individual'))
     % Individual-based evolution control
-  
+     for comment = 1:1
     nRequired = newModel.getNTrainData();
     % The number of points to be 'pre-sampled'
     nEvaluated = ceil(surrogateOpts.evoControlPreSampleSize * lambda);
@@ -197,6 +198,8 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
     arx = [arx xNew];
     arxvalid = [arxvalid xNewValid];
     arz = [arz zNew];
+    
+     end
 
   elseif (strcmpi(surrogateOpts.evoControl, 'generation'))
     % Generation-based evolution control
@@ -264,6 +267,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
           sampleCmaesNoFitness(xmean, sigma, lambda, BD, diagD, surrogateOpts.sampleOpts);
       % shift the model (and possibly evaluate some new points newX, newY = f(newX) )
       % newX = []; newY = []; newZ = []; evals = 0;
+      
       [shiftedModel, evals, newX, newY, newZ] = lastModel.generationUpdate(xmean', xValidValid', zValid', surrogateOpts.evoControlValidatePoints, fitfun_handle, varargin{:});
       [shiftedReduceModel, evalReds, newRedX, newRedY, newRedZ] = lastReduceModel.generationUpdate(xmean', xValidValid', zValid', surrogateOpts.evoControlValidatePoints, fitfun_handle, varargin{:});
       % count the original evaluations
@@ -290,8 +294,12 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
       % calculate/predict the fitness of the not-so-far evaluated points
       if (~isempty(shiftedModel))
         % we've got a valid model, so we'll use it!
-        [predict_fitness_raw, ~] = shiftedModel.predict(arx(:,remainingIdx)');
-        [predict_fitness_raw_reduce, ~] = shiftedReduceModel.predict(arx(:,remainingIdx)');
+        whichModel='full'; %reduce
+        if(strcmp(whichModel,'full'))
+            [predict_fitness_raw, ~] = shiftedModel.predict(arx(:,remainingIdx)');
+        else
+            [predict_fitness_raw, ~] = shiftedReduceModel.predict(arx(:,remainingIdx)');
+        end;
         fitness_raw(remainingIdx) = predict_fitness_raw';
         disp(['Model.generationUpdate(): We are using the model for ' num2str(length(remainingIdx)) ' individuals.']);
         % shift the predicted fitness: the best predicted fitness
@@ -322,6 +330,7 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
         if (isTrained)
           % TODO: archive the lastModel...?
           lastModel = newModel;
+          lastReduceModel=newReduceModel;
           % leave the next generation as a model-evaluated:
           generationEC = generationEC.holdOn();
         else
@@ -392,7 +401,15 @@ surrogateOpts.sampleOpts.dimReductionReduceDistance=1;
         ME.model=model;
         ME.yPredictReduce=yPredictReduce;
         ME.originException=E;
-        throw(ME);        
+%         throw(ME);  
+        rmse=NaN;
+        kendall=NaN;
+        rmseReduce=NaN;
+        kendallReduce=NaN;
+        kendallDistanceError=NaN;
+        sameCntNormal=NaN;
+        sameCntReduce=NaN;
+        mu= NaN;
     end
     
     
