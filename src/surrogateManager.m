@@ -216,6 +216,20 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
     end
 
     sampleSigma = surrogateOpts.evoControlSampleRange * sigma;
+    if(generationEC.trainModel)
+        [newModel, newReduceModel, surrogateStats, isTrained] = trainGenerationECModel(mu,newModel, archive, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
+        if (isTrained)
+          % TODO: archive the lastModel...?
+          lastModel = newModel;
+          lastReduceModel= newReduceModel;
+        else
+          % not enough training data :( -- continue with another
+          % 'original'-evaluated generation
+          generationEC = generationEC.useOrigInsteadOfModel();
+        end
+
+        
+    end;    
 
     if (generationEC.evaluateOriginal)
       %
@@ -225,23 +239,23 @@ function [fitness_raw, arx, arxvalid, arz, counteval, surrogateStats] = surrogat
 
       surrogateOpts.sampleOpts.counteval = counteval;
       archive = archive.save(arxvalid', fitness_raw', countiter);
-      if (~ generationEC.isNextOriginal())
-        % we will switch to 'model'-mode in the next generation
-        % prepare data for a new model
-
-        [newModel, newReduceModel, surrogateStats, isTrained] = trainGenerationECModel(mu,newModel, archive, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
-
-        if (isTrained)
-          % TODO: archive the lastModel...?
-          lastModel = newModel;
-          lastReduceModel= newReduceModel;
-        else
-          % not enough training data :( -- continue with another
-          % 'original'-evaluated generation
-          generationEC = generationEC.holdOn();
-          return;
-        end
-      end       % ~ generationEC.isNextOriginal()
+%       if (~ generationEC.isNextOriginal())
+%         % we will switch to 'model'-mode in the next generation
+%         % prepare data for a new model
+% 
+%         [newModel, newReduceModel, surrogateStats, isTrained] = trainGenerationECModel(mu,newModel, archive, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter);
+% 
+%         if (isTrained)
+%           % TODO: archive the lastModel...?
+%           lastModel = newModel;
+%           lastReduceModel= newReduceModel;
+%         else
+%           % not enough training data :( -- continue with another
+%           % 'original'-evaluated generation
+%           generationEC = generationEC.holdOn();
+%           return;
+%         end
+%       end       % ~ generationEC.isNextOriginal()
 
     else        % generationEC.evaluateModel() == true
       %

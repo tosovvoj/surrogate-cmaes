@@ -41,6 +41,13 @@ classdef GenerationEC < handle
       % test whether evalute with a model
       result = strcmp(obj.currentMode, 'model');
     end 
+    
+    function train = trainModel(obj)
+        model = strcmp(obj.currentMode, 'model');
+        firstModel=eq(obj.remaining,obj.modelGenerations);
+        train= model & firstModel;
+        
+    end;
 
     function obj = next(obj)
       % change the currentMode if all the generations from
@@ -84,6 +91,13 @@ classdef GenerationEC < handle
       % later in the same generation, next() is expected to be called
       obj.currentMode = 'original';
       obj.remaining = 2;
+    end
+    
+     function obj = useOrigInsteadOfModel(obj)
+      % set the next generation and currentMode to 'original'
+      % later in the same generation, next() is not expected to be called
+      obj.currentMode = 'original';
+      obj.remaining = 1;
     end
 
     function gens = getLastOriginalGenerations(obj, n)
