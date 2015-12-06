@@ -430,6 +430,8 @@ surrogateOpts.sampleOpts.dimReductionReduceDistance=1;
         sameCntNormal=NaN;
         sameCntReduce=NaN;
         mu= NaN;
+        bad=NaN;
+        badReduce=NaN;
     end
     
     
