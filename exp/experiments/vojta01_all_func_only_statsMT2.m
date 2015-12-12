@@ -1,4 +1,4 @@
-exp_id = 'vojta01_all_func_only_statsMT';
+exp_id = 'vojta01_all_func_only_statsMT2';
 exp_description = 'Surrogate CMA-ES model, GP only statistics just orig generation to se how model and reduce model are good';
 
 machines = {'m'};
@@ -16,7 +16,7 @@ logDir = '/storage/plzen1/home/tosovvoj/public';
 bbParamDef(1).name   = 'dimensions';
 bbParamDef(1).values = {10,20,25,30};      % {2, 5 10};
 bbParamDef(2).name   = 'functions';
-bbParamDef(2).values = {1,2,3,4,5,6,7,8,9,10};%{1, 2, 3, 8, 13, 21};%num2cell()%(1:24);  % {1, 2, 3, 5, 6, 8, 10, 11, 12, 13, 14, 20, 21};
+bbParamDef(2).values = {11,12,13,14,15,16,17,18,19,20,21,22,23,24};%{1, 2, 3, 8, 13, 21};%num2cell()%(1:24);  % {1, 2, 3, 5, 6, 8, 10, 11, 12, 13, 14, 20, 21}; % 1,2,3,4,5,6,7,8,9,10
 % dimensions  = [10];     % which dimensions to optimize, subset of [2 3 5 10 20 40];
 % functions   = [8];      % function ID's to optimize (2 Sphere, 3 Rastrigin, 8 Rosenbrock)
 bbParamDef(3).name   = 'opt_function';
