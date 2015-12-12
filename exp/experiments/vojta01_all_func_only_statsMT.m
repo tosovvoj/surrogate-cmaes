@@ -1,4 +1,4 @@
-exp_id = 'vojta01_all_func_only_stats';
+exp_id = 'vojta01_all_func_only_statsMT';
 exp_description = 'Surrogate CMA-ES model, GP only statistics just orig generation to se how model and reduce model are good';
 
 machines = {'m'};
