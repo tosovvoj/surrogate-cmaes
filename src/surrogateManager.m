@@ -370,11 +370,11 @@ end
 function surrogateStats = getModelStatistics(weights,mu,model,reduceModel, xmean, sigma, lambda, BD, diagD, surrogateOpts, countiter)
 % print and save the statistics about the currently 
 % trained model on testing data
-dimReductionReduceDistanceBackup=surrogateOpts.sampleOpts.dimReductionReduceDistance;
-surrogateOpts.sampleOpts.dimReductionReduceDistance=1;
+% dimReductionReduceDistanceBackup=surrogateOpts.sampleOpts.dimReductionReduceDistance;
+% surrogateOpts.sampleOpts.dimReductionReduceDistance=1;
   [~, xValidTest, ~] = ...
       sampleCmaesNoFitness(xmean, sigma, lambda, BD, diagD, surrogateOpts.sampleOpts);
-  surrogateOpts.sampleOpts.dimReductionReduceDistance=dimReductionReduceDistanceBackup;
+%   surrogateOpts.sampleOpts.dimReductionReduceDistance=dimReductionReduceDistanceBackup;
   surrogateStats = NaN(1, 10);
   if (isfield(surrogateOpts.modelOpts, 'bbob_func'))
     preciseModel = ModelFactory.createModel('bbob', surrogateOpts.modelOpts, xmean');

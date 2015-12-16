@@ -19,7 +19,8 @@ function [arx, arxvalid, arz] = sampleCmaesNoFitness(xmean, sigma, lambda, BD, d
   % Generate and evaluate lambda offspring
 %  distanceReduce=opts.dimReductionReduceDistance;
  if(opts.dimReductionReduceDistance~=1)
-    reduceBD=[BD(:,1:(opts.dimReduceCnt)/opts.dimReductionReduceDistance), BD(:,opts.dimReduceCnt+1:end)];
+%     reduceBD=[BD(:,1:(opts.dimReduceCnt)/opts.dimReductionReduceDistance), BD(:,opts.dimReduceCnt+1:end)];
+    reduceBD=[(BD(:,1:(int32(opts.dimNeglectCnt)))/opts.dimReductionReduceDistance), BD(:,int32(opts.dimNeglectCnt+1):end)];
  else
      reduceBD=BD;
  end
