@@ -387,8 +387,8 @@ function surrogateStats = getModelStatistics(weights,mu,model,reduceModel, xmean
     yPredictReduce = reduceModel.predict(xValidTest');
     
     try
-         pointInOrigBaseWithNeglectDistance=NaN;
-        pointInOrigBaseWithNeglectDistance =reduceModel.transfReduceTransfBack(xValidTest');
+%          pointInOrigBaseWithNeglectDistance=NaN;
+%         pointInOrigBaseWithNeglectDistance =reduceModel.transfReduceTransfBack(xValidTest');
         neglectedDistance=getDistance(BD,xValidTest',surrogateOpts.modelOpts.dimUseCnt,surrogateOpts.modelOpts.dimNeglectCnt,diagD);
         error= abs(yPredictReduce - yTest);
         kendallDistanceError= corr(neglectedDistance', error, 'type', 'Kendall');
@@ -441,7 +441,7 @@ function surrogateStats = getModelStatistics(weights,mu,model,reduceModel, xmean
     fprintf('kendallDistanceError = %f.\n',kendallDistanceError);
     fprintf('sameCntNormal = %f. sameCntReduce = %f.\n',sameCntNormal,sameCntReduce);
     fprintf('bad = %f. badReduce = %f.\n',bad,badReduce);
-    surrogateStats = [rmse rmseReduce kendall kendallReduce sameCntNormal sameCntReduce bad badReduce kendallDistanceError pointInOrigBaseWithNeglectDistance];
+    surrogateStats = [rmse rmseReduce kendall kendallReduce sameCntNormal sameCntReduce bad badReduce kendallDistanceError mu];
     
   else
     fprintf('\n');
