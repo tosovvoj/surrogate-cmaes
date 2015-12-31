@@ -176,6 +176,16 @@ classdef (Abstract) Model
       [y,sd2] = modelPredict(obj,XtransfReduce);
 
     end
+    function [pointsWND]= transfReduceTransfBack(obj,points)
+        [cntPoints,~]=size(points);
+        [~,origDim]=size(obj.trainBD);
+        selector=((obj.options.dimNeglectCnt+1):origDim);
+          XtransfReduce=reduceDimensionality(obj.trainBD,selector,points);
+          XtransfReduce=[zeros(cntPoints,obj.options.dimNeglectCnt) XtransfReduce];
+          pointsWND=obj.trainBD*XtransfReduce';
+          pointsWND=pointsWND';
+        
+    end
     
     function [output, y] = getModelOutput(obj,X)
     % Predicts the function values, the probability of improvement, or 
