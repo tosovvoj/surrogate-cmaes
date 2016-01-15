@@ -63,7 +63,7 @@ classdef GpModel < Model
       end
       obj.hyp.inf = defopts(obj.options.hyp, 'inf', log(1e-2)); % should be roughly somewhere between log(1e-3) and log(1e-2)
       obj.hyp.lik = defopts(obj.options.hyp, 'lik', log(0.01));  % should be somewhere between log(0.01) and log(1)
-      obj.hyp.cov = defopts(obj.options.hyp, 'cov', log([0.5; 2]));   % should be somewhere between log([0.1 2]) and log([2 1e6])
+      obj.hyp.cov = defopts(obj.options.hyp, 'cov', log([0.5; 2; 2]));   % should be somewhere between log([0.1 2]) and log([2 1e6])
       covFcn = defopts(obj.options, 'covFcn',  '{@covMaterniso, 5}');
       if (exist(covFcn) == 2)
         % string with name of an m-file function
